@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace ChromaDBSharp.Embeddings
 {
     public interface IEmbeddable
     {
-        public float[][] Generate(string[] texts);
+        Task<IEnumerable<IEnumerable<float>>> Generate(IEnumerable<string> texts);
     }
 }

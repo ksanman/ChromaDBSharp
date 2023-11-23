@@ -1,6 +1,8 @@
-﻿using ChromaDBSharp.Models;
+﻿using ChromaDBSharp.Embeddings;
+using ChromaDBSharp.Models;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -18,10 +20,12 @@ namespace ChromaDBSharp.Client
         public string CollectionName => _collection.Name;
         public Collection Collection => _collection;
         private string CollectionApi => $"/api/v1/collections/{CollectionId}";
-        public CollectionClient(HttpClient httpClient, Collection collection) 
+        private readonly IEmbeddable? _embeddingFunction;
+        public CollectionClient(HttpClient httpClient, Collection collection, IEmbeddable? embeddingFunction) 
         {
             _httpClient = httpClient;
             _collection = collection;
+            _embeddingFunction = embeddingFunction;
         }
 
         public QueryResult Query(IDictionary<string, object>? where,
@@ -52,15 +56,16 @@ namespace ChromaDBSharp.Client
             return queryResult ?? throw new Exception($"Invalid query result: {content}");
         }
 
-        public void Add(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IDictionary<string, object> metadatas, IEnumerable<string> documents)
+        public void Add(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents)
         {
             Task addTask = Task.Run(() => AddAsync(ids, embeddings, metadatas, documents));
             addTask.Wait();
         }
 
-        public async Task AddAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IDictionary<string, object> metadatas, IEnumerable<string> documents)
+        public async Task AddAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents)
         {
-            CollectionRequest request = new CollectionRequest(ids, embeddings, metadatas, documents);
+            ValidationResult result = await Validate(true, ids, embeddings, metadatas, documents);
+            CollectionRequest request = new CollectionRequest(result.Ids, result.Embeddings, result.Metadatas, result.Documents);
             HttpResponseMessage response = await _httpClient.PostAsJsonAsync($"{CollectionApi}/add", request);
             if (!response.IsSuccessStatusCode)
             {
@@ -69,15 +74,16 @@ namespace ChromaDBSharp.Client
             }
         }
 
-        public void Update(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IDictionary<string, object> metadatas, IEnumerable<string> documents)
+        public void Update(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents)
         {
             Task updateTask = Task.Run(() => UpdateAsync(ids,embeddings,metadatas,documents));
             updateTask.Wait();
         }
 
-        public async Task UpdateAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IDictionary<string, object> metadatas, IEnumerable<string> documents)
+        public async Task UpdateAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents)
         {
-            CollectionRequest request = new CollectionRequest(ids, embeddings, metadatas, documents);
+            ValidationResult result = await Validate(true, ids, embeddings, metadatas, documents);
+            CollectionRequest request = new CollectionRequest(result.Ids, result.Embeddings, result.Metadatas, result.Documents);
             HttpResponseMessage response = await _httpClient.PostAsJsonAsync($"{CollectionApi}/update", request);
             if (!response.IsSuccessStatusCode)
             {
@@ -86,15 +92,16 @@ namespace ChromaDBSharp.Client
             }
         }
 
-        public void Upsert(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IDictionary<string, object> metadatas, IEnumerable<string> documents)
+        public void Upsert(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents)
         {
             Task upsertTask = Task.Run(() => UpsertAsync(ids,embeddings,metadatas,documents));
             upsertTask.Wait();
         }
 
-        public async Task UpsertAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IDictionary<string, object> metadatas, IEnumerable<string> documents)
+        public async Task UpsertAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents)
         {
-            CollectionRequest request = new CollectionRequest(ids, embeddings, metadatas, documents);
+            ValidationResult result = await Validate(true, ids, embeddings, metadatas, documents);
+            CollectionRequest request = new CollectionRequest(result.Ids, result.Embeddings, result.Metadatas, result.Documents);
             HttpResponseMessage response = await _httpClient.PostAsJsonAsync($"{CollectionApi}/upsert", request);
             if (!response.IsSuccessStatusCode)
             {
@@ -158,6 +165,52 @@ namespace ChromaDBSharp.Client
 
             int count = JsonSerializer.Deserialize<int>(content);
             return count;
+        }
+
+        private async Task<ValidationResult> Validate(bool requireEmbeddingsOrDocuments, IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
+        {
+            if (requireEmbeddingsOrDocuments)
+            {
+                if ((embeddings == null) && (documents == null))
+                {
+                    throw new Exception("Embeddings and documents cannot both be undefined");
+                }
+            }
+
+            if ((embeddings == null) && (documents != null))
+            {
+                if (_embeddingFunction != null)
+                {
+                    embeddings = await _embeddingFunction.Generate(documents);
+                }
+                else
+                {
+                    throw new Exception("EmbeddingFunction is undefined. Please configure an embedding function");
+                }
+            }
+            if (embeddings == null)
+                throw new Exception("Embeddings is undefined but shouldn't be");
+            if (
+                (embeddings != null &&
+                    ids.Count() != embeddings.Count()) ||
+                (metadatas != null &&
+                    ids.Count() != metadatas.Count()) ||
+                (documents != null &&
+                    ids.Count() != documents.Count())
+            )
+            {
+                throw new Exception("ids, embeddings, metadatas, and documents must all be the same length");
+            }
+
+            bool hasDuplicateIds = ids.GroupBy(x => x).Where(v => v.Count() > 1).Any();
+
+            if (hasDuplicateIds)
+            {
+                var duplicateIds = string.Join(",", ids.GroupBy(x => x).Where(v => v.Count() > 1).Select(v => v.Key));
+                throw new Exception($"Expected IDs to be unique, found duplicates for: ${duplicateIds}");
+            }
+
+            return new ValidationResult(ids, embeddings, metadatas, documents);
         }
     }
 }

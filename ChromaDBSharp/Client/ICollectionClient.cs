@@ -6,12 +6,12 @@ namespace ChromaDBSharp.Client
 {
     public interface ICollectionClient
     {
-        void Add(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IDictionary<string, object> metadatas, IEnumerable<string> documents);
-        Task AddAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IDictionary<string, object> metadatas, IEnumerable<string> documents);
-        void Update(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IDictionary<string, object> metadatas, IEnumerable<string> documents);
-        Task UpdateAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IDictionary<string, object> metadatas, IEnumerable<string> documents);
-        void Upsert(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IDictionary<string, object> metadatas, IEnumerable<string> documents);
-        Task UpsertAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IDictionary<string, object> metadatas, IEnumerable<string> documents);
+        void Add(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents);
+        Task AddAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents);
+        void Update(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents);
+        Task UpdateAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents);
+        void Upsert(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents);
+        Task UpsertAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents);
         GetResult Get(IEnumerable<string>? ids = null, IDictionary<string, object>? where = null,int? limit = null,int? offset = null,IDictionary<string, object>? whereDocument = null,IEnumerable<string>? include = null);
         Task<GetResult> GetAsync(IEnumerable<string>? ids = null, IDictionary<string, object>? where = null, int? limit = null, int? offset = null, IDictionary<string, object>? whereDocument = null, IEnumerable<string>? include = null);
         void Delete(IEnumerable<string>? ids = null, IDictionary<string, object>? where = null, IDictionary<string, object>? whereDocument = null);
