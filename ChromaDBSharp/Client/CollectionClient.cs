@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace ChromaDBSharp.Client
 {
-
+    // TODO - Add Ability to have embedding functions.
     public class CollectionClient : ICollectionClient
     {
         private readonly HttpClient _httpClient;
