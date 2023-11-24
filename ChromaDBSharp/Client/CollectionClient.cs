@@ -5,12 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace ChromaDBSharp.Client
 {
-    // TODO - Add Ability to have embedding functions.
     public class CollectionClient : ICollectionClient
     {
         private readonly HttpClient _httpClient;
@@ -52,8 +50,9 @@ namespace ChromaDBSharp.Client
                 throw new Exception($"Error querying collection {CollectionName}: {content}");
             }
 
-            QueryResult? queryResult = JsonSerializer.Deserialize<QueryResult>(content);
-            return queryResult ?? throw new Exception($"Invalid query result: {content}");
+            QueryResult queryResult = await response.Content.ReadFromJsonAsync<QueryResult>() 
+                ?? throw new Exception($"Invalid query result: {content}");
+            return queryResult;
         }
 
         public void Add(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents)
@@ -126,8 +125,9 @@ namespace ChromaDBSharp.Client
                 throw new Exception($"Error getting from collection {CollectionName}: {content}");
             }
 
-            GetResult? getResult = JsonSerializer.Deserialize<GetResult>(content);
-            return getResult ?? throw new Exception($"Invalid collection get response: {content}");
+            GetResult getResult = await response.Content.ReadFromJsonAsync<GetResult>()
+                ?? throw new Exception($"Invalid collection get response: {content}");
+            return getResult;
         }
 
         public void Delete(IEnumerable<string>? ids = null, IDictionary<string, object>? where = null, IDictionary<string, object>? whereDocument = null)
@@ -145,7 +145,6 @@ namespace ChromaDBSharp.Client
                 string content = await response.Content.ReadAsStringAsync();
                 throw new Exception($"Error calling delete for collection {CollectionName}: {content}");
             }
-            throw new NotImplementedException();
         }
 
         public int Count()
@@ -163,7 +162,7 @@ namespace ChromaDBSharp.Client
                 throw new Exception($"Error getting count for collection {CollectionName}: {content}");
             }
 
-            int count = JsonSerializer.Deserialize<int>(content);
+            int count = await response.Content.ReadFromJsonAsync<int>();
             return count;
         }
 

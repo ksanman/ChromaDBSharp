@@ -12,6 +12,7 @@ namespace ChromaDBSharp
         public static void RegisterChromaDBSharp(this IServiceCollection services)
         {
             services.AddHttpClient<IChromaDBClient, ChromaDBClient>();
+            services.AddScoped<IChromaDBClient, ChromaDBClient>();
         }
     }
 }

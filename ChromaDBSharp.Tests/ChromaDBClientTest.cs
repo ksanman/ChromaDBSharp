@@ -49,7 +49,7 @@ namespace ChromaDBSharp.Tests
         {
             ChromaDBClient client = new(_httpClient);
             Assert.Throws<AggregateException>(() => client.CreateCollection("test"));
-            Collection collection = client.CreateCollection("test", createOrGet: true);
+            ICollectionClient collection = client.CreateCollection("test", createOrGet: true);
             Assert.NotNull(collection);
         }
     }
