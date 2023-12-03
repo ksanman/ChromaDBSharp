@@ -1,15 +1,15 @@
-﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace ChromaDBSharp.Models
 {
     internal class DeleteRequest
     {
-        [JsonPropertyName("ids")]
+        [JsonProperty("ids")]
         public IEnumerable<string>? Ids { get; set; } = null;
-        [JsonPropertyName("where")]
+        [JsonProperty("where")]
         public IDictionary<string, object>? Where { get; set; } = null;
-        [JsonPropertyName("where_document")]
+        [JsonProperty("where_document")]
         public IDictionary<string, object>? WhereDocument { get; set; } = null;
         public DeleteRequest() { }
         public DeleteRequest(IEnumerable<string>? ids, IDictionary<string, object>? where, IDictionary<string, object>? whereDocument)

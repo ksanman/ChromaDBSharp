@@ -6,16 +6,7 @@ using System.Threading.Tasks;
 
 namespace ChromaDBSharp.Tests
 {
-    internal class CustomQueryable
+    internal class CollectionClientTestHelper
     {
-    }
-
-    public class CustomQuerableTest
-    {
-        [Fact]
-        public void Test()
-        {
-
-        }
     }
 }

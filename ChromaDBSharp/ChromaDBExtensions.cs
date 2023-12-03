@@ -1,9 +1,7 @@
 ﻿using ChromaDBSharp.Client;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Text;
+using System.Net.Http;
 
 namespace ChromaDBSharp
 {
@@ -12,6 +10,12 @@ namespace ChromaDBSharp
         public static void RegisterChromaDBSharp(this IServiceCollection services)
         {
             services.AddHttpClient<IChromaDBClient, ChromaDBClient>();
+            services.AddScoped<IChromaDBClient, ChromaDBClient>();
+        }
+
+        public static void RegisterChromaDBSharp(this IServiceCollection services, Action<HttpClient> configureClient)
+        {
+            services.AddHttpClient<IChromaDBClient, ChromaDBClient>(configureClient);
             services.AddScoped<IChromaDBClient, ChromaDBClient>();
         }
     }

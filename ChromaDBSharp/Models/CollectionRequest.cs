@@ -1,13 +1,13 @@
-﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace ChromaDBSharp.Models
 {
     internal class CollectionRequest
     {
-        [JsonPropertyName("ids")]
+        [JsonProperty("ids")]
         public IEnumerable<string>? Ids { get; set; } = null;
-        [JsonPropertyName("embeddings")]
+        [JsonProperty("embeddings")]
         public IEnumerable<IEnumerable<float>>? Embeddings { get; set; } = null;
         public IEnumerable<IDictionary<string, object>>? Metadatas { get; set; } = null;
         public IEnumerable<string>? Documents { get; set; } = null;

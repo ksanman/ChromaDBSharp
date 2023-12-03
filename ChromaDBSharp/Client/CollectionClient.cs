@@ -1,10 +1,10 @@
 ﻿using ChromaDBSharp.Embeddings;
 using ChromaDBSharp.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace ChromaDBSharp.Client
@@ -19,7 +19,7 @@ namespace ChromaDBSharp.Client
         public Collection Collection => _collection;
         private string CollectionApi => $"/api/v1/collections/{CollectionId}";
         private readonly IEmbeddable? _embeddingFunction;
-        public CollectionClient(HttpClient httpClient, Collection collection, IEmbeddable? embeddingFunction) 
+        public CollectionClient(HttpClient httpClient, Collection collection, IEmbeddable? embeddingFunction = null) 
         {
             _httpClient = httpClient;
             _collection = collection;
@@ -27,45 +27,67 @@ namespace ChromaDBSharp.Client
         }
 
         public QueryResult Query(IDictionary<string, object>? where,
-            IDictionary<string, object>? whereDocument,
-            IEnumerable<IEnumerable<float>>? queryEmbeddings,
+            IDictionary<string, object>? whereDocument = null,
+            IEnumerable<IEnumerable<float>>? queryEmbeddings = null,
+            IEnumerable<string>? queryDocuments = null,
             int numberOfResults = 10,
             IEnumerable<string>? include = null)
         {
-            Task<QueryResult> queryTask = Task.Run(() => QueryAsync(where, whereDocument, queryEmbeddings, numberOfResults, include));
+            Task<QueryResult> queryTask = Task.Run(() => QueryAsync(where, whereDocument, queryEmbeddings, queryDocuments, numberOfResults, include));
             return queryTask.Result;    
         }
 
         public async Task<QueryResult> QueryAsync(IDictionary<string, object>? where,
-            IDictionary<string, object>? whereDocument,
-            IEnumerable<IEnumerable<float>>? queryEmbeddings,
+            IDictionary<string, object>? whereDocument = null,
+            IEnumerable<IEnumerable<float>>? queryEmbeddings = null,
+            IEnumerable<string>? queryDocuments = null,
             int numberOfResults = 10,
             IEnumerable<string>? include = null)
         {
+            if (queryEmbeddings == null && queryDocuments == null)
+            {
+                throw new Exception("queryEmbeddings and queryTexts cannot both be undefined");
+            }
+            else if (queryEmbeddings == null && queryDocuments != null)
+            {
+                if (_embeddingFunction != null)
+                {
+                    queryEmbeddings = await _embeddingFunction.Generate(queryDocuments);
+                }
+                else
+                {
+                    throw new Exception("embeddingFunction is undefined. Please configure an embedding function");
+                }
+            }
+            if (queryEmbeddings == null)
+            {
+                throw new Exception("embeddings is undefined but shouldnt be");
+            }
+
             QueryRequest request = new QueryRequest(where, whereDocument, queryEmbeddings, numberOfResults, include);
-            HttpResponseMessage response = await _httpClient.PostAsJsonAsync($"{CollectionApi}/query", request);
+            HttpResponseMessage response = await _httpClient.PostJsonAsync($"{CollectionApi}/query", request);
             string content = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
             {
                 throw new Exception($"Error querying collection {CollectionName}: {content}");
             }
 
-            QueryResult queryResult = await response.Content.ReadFromJsonAsync<QueryResult>() 
+            QueryResult queryResult = JsonConvert.DeserializeObject<QueryResult>(content)
                 ?? throw new Exception($"Invalid query result: {content}");
             return queryResult;
         }
 
-        public void Add(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents)
+        public void Add(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
         {
             Task addTask = Task.Run(() => AddAsync(ids, embeddings, metadatas, documents));
             addTask.Wait();
         }
 
-        public async Task AddAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents)
+        public async Task AddAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
         {
             ValidationResult result = await Validate(true, ids, embeddings, metadatas, documents);
             CollectionRequest request = new CollectionRequest(result.Ids, result.Embeddings, result.Metadatas, result.Documents);
-            HttpResponseMessage response = await _httpClient.PostAsJsonAsync($"{CollectionApi}/add", request);
+            HttpResponseMessage response = await _httpClient.PostJsonAsync($"{CollectionApi}/add", request);
             if (!response.IsSuccessStatusCode)
             {
                 string content = await response.Content.ReadAsStringAsync();
@@ -73,17 +95,17 @@ namespace ChromaDBSharp.Client
             }
         }
 
-        public void Update(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents)
+        public void Update(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
         {
             Task updateTask = Task.Run(() => UpdateAsync(ids,embeddings,metadatas,documents));
             updateTask.Wait();
         }
 
-        public async Task UpdateAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents)
+        public async Task UpdateAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
         {
             ValidationResult result = await Validate(true, ids, embeddings, metadatas, documents);
             CollectionRequest request = new CollectionRequest(result.Ids, result.Embeddings, result.Metadatas, result.Documents);
-            HttpResponseMessage response = await _httpClient.PostAsJsonAsync($"{CollectionApi}/update", request);
+            HttpResponseMessage response = await _httpClient.PostJsonAsync($"{CollectionApi}/update", request);
             if (!response.IsSuccessStatusCode)
             {
                 string content = await response.Content.ReadAsStringAsync();
@@ -91,17 +113,17 @@ namespace ChromaDBSharp.Client
             }
         }
 
-        public void Upsert(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents)
+        public void Upsert(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
         {
             Task upsertTask = Task.Run(() => UpsertAsync(ids,embeddings,metadatas,documents));
             upsertTask.Wait();
         }
 
-        public async Task UpsertAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings, IEnumerable<IDictionary<string, object>>? metadatas, IEnumerable<string>? documents)
+        public async Task UpsertAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
         {
             ValidationResult result = await Validate(true, ids, embeddings, metadatas, documents);
             CollectionRequest request = new CollectionRequest(result.Ids, result.Embeddings, result.Metadatas, result.Documents);
-            HttpResponseMessage response = await _httpClient.PostAsJsonAsync($"{CollectionApi}/upsert", request);
+            HttpResponseMessage response = await _httpClient.PostJsonAsync($"{CollectionApi}/upsert", request);
             if (!response.IsSuccessStatusCode)
             {
                 string content = await response.Content.ReadAsStringAsync();
@@ -118,14 +140,14 @@ namespace ChromaDBSharp.Client
         public async Task<GetResult> GetAsync(IEnumerable<string>? ids = null, IDictionary<string, object>? where = null, int? limit = null, int? offset = null, IDictionary<string, object>? whereDocument = null, IEnumerable<string>? include = null)
         {
             GetRequest request = new GetRequest(ids, where, limit, offset, whereDocument, include);
-            HttpResponseMessage response = await _httpClient.PostAsJsonAsync($"{CollectionApi}/get", request);
+            HttpResponseMessage response = await _httpClient.PostJsonAsync($"{CollectionApi}/get", request);
             string content = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
             {
                 throw new Exception($"Error getting from collection {CollectionName}: {content}");
             }
 
-            GetResult getResult = await response.Content.ReadFromJsonAsync<GetResult>()
+            GetResult getResult = JsonConvert.DeserializeObject<GetResult>(content)
                 ?? throw new Exception($"Invalid collection get response: {content}");
             return getResult;
         }
@@ -139,7 +161,7 @@ namespace ChromaDBSharp.Client
         public async Task DeleteAsync(IEnumerable<string>? ids = null, IDictionary<string, object>? where = null, IDictionary<string, object>? whereDocument = null)
         {
             DeleteRequest request = new DeleteRequest(ids, where, whereDocument);
-            HttpResponseMessage response = await _httpClient.PostAsJsonAsync($"{CollectionApi}/delete", request);
+            HttpResponseMessage response = await _httpClient.PostJsonAsync($"{CollectionApi}/delete", request);
             if (!response.IsSuccessStatusCode)
             {
                 string content = await response.Content.ReadAsStringAsync();
@@ -162,7 +184,7 @@ namespace ChromaDBSharp.Client
                 throw new Exception($"Error getting count for collection {CollectionName}: {content}");
             }
 
-            int count = await response.Content.ReadFromJsonAsync<int>();
+            int count = JsonConvert.DeserializeObject<int>(content);
             return count;
         }
 

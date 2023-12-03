@@ -1,19 +1,19 @@
 ﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace ChromaDBSharp.Models
 {
     internal class QueryRequest
     {
-        [JsonPropertyName("where")]
+        [JsonProperty("where")]
         public IDictionary<string, object>? Where { get; set; } = null;
-        [JsonPropertyName("where_document")]
+        [JsonProperty("where_document")]
         public IDictionary<string, object>? WhereDocument { get; set; } = null;
-        [JsonPropertyName("query_embeddings")]
+        [JsonProperty("query_embeddings")]
         public IEnumerable<IEnumerable<float>>? QueryEmbeddings { get; set; } = null;
-        [JsonPropertyName("n_results")]
+        [JsonProperty("n_results")]
         public int NumberOfResults { get; set; } = 10;
-        [JsonPropertyName("include")]
+        [JsonProperty("include")]
         public IEnumerable<string> Include = new List<string> { "metadatas", "documents", "distances" };
         public QueryRequest() { }
         public QueryRequest(IDictionary<string, object>? where, IDictionary<string, object>? whereDocument, IEnumerable<IEnumerable<float>>? queryEmbeddings, int? numberOfResults, IEnumerable<string>? include)

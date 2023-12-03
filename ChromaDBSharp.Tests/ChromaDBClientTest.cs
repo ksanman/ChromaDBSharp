@@ -62,21 +62,21 @@ namespace ChromaDBSharp.Tests
         }
 
         [Fact]
-        public void UpdateCollection()
-        {
-            ChromaDBClient client = new(_httpClient);
-            //TODO - need a better way for metadata, JSON does serialize correctly...
-            client.UpdateCollection("test", "test", new Dictionary<string, object>
-            {
-                {"id1", "value1" }
-            });
-        }
-
-        [Fact]
         public void DeleteCollection()
         {
             ChromaDBClient client = new(_httpClient);
             client.DeleteCollection("test");
+        }
+
+        [Fact]
+        public void UpdateCollection()
+        {
+            ChromaDBClient client = new(_httpClient);
+
+            client.UpdateCollection("test", "test", new Dictionary<string, object>
+            {
+                {"id1", "value1" }
+            });
         }
     }
 }

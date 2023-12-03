@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace ChromaDBSharp.Models
 {
     public class UpdateCollectionRequest
     {
-        [JsonPropertyName("new_name")]
+        [JsonProperty("new_name")]
         public string? NewName { get; set; } = null;
-        [JsonPropertyName("new_metadata")]
+        [JsonProperty("new_metadata")]
         public IDictionary<string, object>? NewMetadata = null;
     }
 }

@@ -1,9 +1,9 @@
 ﻿using ChromaDBSharp.Embeddings;
 using ChromaDBSharp.Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using System.Net.Http.Json;
 using System.Threading.Tasks;
 
 namespace ChromaDBSharp.Client
@@ -40,8 +40,7 @@ namespace ChromaDBSharp.Client
                 Metadata = metadata,
                 GetOrCreate = getOrCreate
             };
-
-            HttpResponseMessage response = await _httpClient.PostAsJsonAsync("/api/v1/collections", request);
+            HttpResponseMessage response = await _httpClient.PostJsonAsync("/api/v1/collections", request);
 
             string content = await response.Content.ReadAsStringAsync();
 
@@ -50,7 +49,7 @@ namespace ChromaDBSharp.Client
                 throw new Exception($"Error creating collection: {content}");
             }
 
-            Collection collection = await response.Content.ReadFromJsonAsync<Collection>() 
+            Collection collection = JsonConvert.DeserializeObject<Collection>(content) 
                 ?? throw new Exception($"Create Collection returned invalid response {content}");
             return new CollectionClient(_httpClient, collection, embeddingFunction);
         }
@@ -87,7 +86,7 @@ namespace ChromaDBSharp.Client
                 throw new Exception($"Error getting collection {name}: {content}");
             }
 
-            Collection collection = await response.Content.ReadFromJsonAsync<Collection>()
+            Collection collection = JsonConvert.DeserializeObject<Collection>(content)
                 ?? throw new Exception($"Invalid collection response: {content}");
             return new CollectionClient(_httpClient, collection, embeddingFunction);
         }
@@ -108,10 +107,9 @@ namespace ChromaDBSharp.Client
                 throw new Exception($"Error getting ChromaDB heartbeat: {content}");
             }
 
-            HeartbeatResponse? heartbeatResponse = await response.Content.ReadFromJsonAsync<HeartbeatResponse>();
-            return heartbeatResponse == null
-                ? throw new Exception($"Invalid heartbeat response from ChromaDB {content}")
-                : heartbeatResponse.Heartbeat;
+            HeartbeatResponse? heartbeatResponse = JsonConvert.DeserializeObject<HeartbeatResponse>(content)
+                ?? throw new Exception($"Invalid heartbeat response from ChromaDB {content}");
+            return heartbeatResponse.Heartbeat;
         }
 
         public IEnumerable<Collection> ListCollections()
@@ -129,7 +127,7 @@ namespace ChromaDBSharp.Client
                 throw new Exception($"Error getting Collections from ChromaDB: {content}");
             }
 
-            IEnumerable<Collection> collections = await response.Content.ReadFromJsonAsync<IEnumerable<Collection>>()
+            IEnumerable<Collection> collections = JsonConvert.DeserializeObject<IEnumerable<Collection>>(content)
                  ?? throw new Exception($"Invalid response from ListCollections: {content}");
             return collections;
         }
@@ -149,7 +147,7 @@ namespace ChromaDBSharp.Client
             {
                 throw new Exception($"Error resetting ChromaDB: {content}");
             }
-            bool responseValue = await response.Content.ReadFromJsonAsync<bool>();
+            bool responseValue = JsonConvert.DeserializeObject<bool>(content);
             return responseValue;
         }
 
@@ -167,7 +165,7 @@ namespace ChromaDBSharp.Client
                 NewName = name,
                 NewMetadata = metadata
             };
-            HttpResponseMessage response = await _httpClient.PutAsJsonAsync($"api/v1/collections/{collectionId}", request);
+            HttpResponseMessage response = await _httpClient.PutJsonAsync($"api/v1/collections/{collectionId}", request);
 
             if (!response.IsSuccessStatusCode)
             {

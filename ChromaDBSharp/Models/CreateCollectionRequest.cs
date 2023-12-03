@@ -1,15 +1,15 @@
-﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace ChromaDBSharp.Models
 {
     public class CreateCollectionRequest
     {
-        [JsonPropertyName("name")]
+        [JsonProperty("name")]
         public string Name { get; set; } = string.Empty;
-        [JsonPropertyName("metadata")]
+        [JsonProperty("metadata")]
         public IDictionary<string, object>? Metadata { get; set; } = new Dictionary<string, object>();
-        [JsonPropertyName("get_or_create")]
+        [JsonProperty("get_or_create")]
         public bool GetOrCreate { get; set; } = false;
     }
 }

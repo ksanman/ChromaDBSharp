@@ -1,21 +1,21 @@
-﻿using System.Collections.Generic;
-using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace ChromaDBSharp.Models
 {
     internal class GetRequest
     {
-        [JsonPropertyName("ids")]
+        [JsonProperty("ids")]
         public IEnumerable<string>? Ids { get; set; } = null;
-        [JsonPropertyName("where")]
+        [JsonProperty("where")]
         public IDictionary<string, object>? Where { get; set; } = null;
-        [JsonPropertyName("limit")]
+        [JsonProperty("limit")]
         public int? Limit { get; set; } = null;
-        [JsonPropertyName("offset")]
+        [JsonProperty("offset")]
         public int? Offset { get; set; } = null;
-        [JsonPropertyName("where_document")]
+        [JsonProperty("where_document")]
         public IDictionary<string, object>? WhereDocument { get; set; } = null;
-        [JsonPropertyName("include")]
+        [JsonProperty("include")]
         public IEnumerable<string>? Include { get; set; } = null;
         public GetRequest() { }
         public GetRequest(IEnumerable<string>? ids, IDictionary<string, object>? where, int? limit, int? offset, IDictionary<string, object>? whereDocument, IEnumerable<string>? include)

@@ -1,10 +1,10 @@
-﻿using System.Text.Json.Serialization;
+﻿using Newtonsoft.Json;
 
 namespace ChromaDBSharp.Models
 {
     internal class HeartbeatResponse
     {
-        [JsonPropertyName("nanosecond heartbeat")]
+        [JsonProperty("nanosecond heartbeat")]
         public long Heartbeat { get; set; }
     }
 }
