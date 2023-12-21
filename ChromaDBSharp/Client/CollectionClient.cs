@@ -26,33 +26,33 @@ namespace ChromaDBSharp.Client
             _embeddingFunction = embeddingFunction;
         }
 
-        public QueryResult Query(IDictionary<string, object>? where,
+        public QueryResult Query(IDictionary<string, object>? where = null,
             IDictionary<string, object>? whereDocument = null,
             IEnumerable<IEnumerable<float>>? queryEmbeddings = null,
-            IEnumerable<string>? queryDocuments = null,
+            IEnumerable<string>? queryTexts = null,
             int numberOfResults = 10,
             IEnumerable<string>? include = null)
         {
-            Task<QueryResult> queryTask = Task.Run(() => QueryAsync(where, whereDocument, queryEmbeddings, queryDocuments, numberOfResults, include));
+            Task<QueryResult> queryTask = Task.Run(() => QueryAsync(where, whereDocument, queryEmbeddings, queryTexts, numberOfResults, include));
             return queryTask.Result;    
         }
 
-        public async Task<QueryResult> QueryAsync(IDictionary<string, object>? where,
+        public async Task<QueryResult> QueryAsync(IDictionary<string, object>? where = null,
             IDictionary<string, object>? whereDocument = null,
             IEnumerable<IEnumerable<float>>? queryEmbeddings = null,
-            IEnumerable<string>? queryDocuments = null,
+            IEnumerable<string>? queryTexts = null,
             int numberOfResults = 10,
             IEnumerable<string>? include = null)
         {
-            if (queryEmbeddings == null && queryDocuments == null)
+            if (queryEmbeddings == null && queryTexts == null)
             {
                 throw new Exception("queryEmbeddings and queryTexts cannot both be undefined");
             }
-            else if (queryEmbeddings == null && queryDocuments != null)
+            else if (queryEmbeddings == null && queryTexts != null)
             {
                 if (_embeddingFunction != null)
                 {
-                    queryEmbeddings = await _embeddingFunction.Generate(queryDocuments);
+                    queryEmbeddings = await _embeddingFunction.Generate(queryTexts);
                 }
                 else
                 {
@@ -83,7 +83,7 @@ namespace ChromaDBSharp.Client
             addTask.Wait();
         }
 
-        public async Task AddAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
+        public async Task AddAsync(IEnumerable<string>? ids = null, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
         {
             ValidationResult result = await Validate(true, ids, embeddings, metadatas, documents);
             CollectionRequest request = new CollectionRequest(result.Ids, result.Embeddings, result.Metadatas, result.Documents);
@@ -95,13 +95,13 @@ namespace ChromaDBSharp.Client
             }
         }
 
-        public void Update(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
+        public void Update(IEnumerable<string>? ids = null, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
         {
             Task updateTask = Task.Run(() => UpdateAsync(ids,embeddings,metadatas,documents));
             updateTask.Wait();
         }
 
-        public async Task UpdateAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
+        public async Task UpdateAsync(IEnumerable<string>? ids = null, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
         {
             ValidationResult result = await Validate(true, ids, embeddings, metadatas, documents);
             CollectionRequest request = new CollectionRequest(result.Ids, result.Embeddings, result.Metadatas, result.Documents);
@@ -113,13 +113,13 @@ namespace ChromaDBSharp.Client
             }
         }
 
-        public void Upsert(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
+        public void Upsert(IEnumerable<string>? ids = null, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
         {
             Task upsertTask = Task.Run(() => UpsertAsync(ids,embeddings,metadatas,documents));
             upsertTask.Wait();
         }
 
-        public async Task UpsertAsync(IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
+        public async Task UpsertAsync(IEnumerable<string>? ids = null, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
         {
             ValidationResult result = await Validate(true, ids, embeddings, metadatas, documents);
             CollectionRequest request = new CollectionRequest(result.Ids, result.Embeddings, result.Metadatas, result.Documents);
@@ -188,7 +188,7 @@ namespace ChromaDBSharp.Client
             return count;
         }
 
-        private async Task<ValidationResult> Validate(bool requireEmbeddingsOrDocuments, IEnumerable<string> ids, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
+        private async Task<ValidationResult> Validate(bool requireEmbeddingsOrDocuments, IEnumerable<string>? ids = null, IEnumerable<IEnumerable<float>>? embeddings = null, IEnumerable<IDictionary<string, object>>? metadatas = null, IEnumerable<string>? documents = null)
         {
             if (requireEmbeddingsOrDocuments)
             {
