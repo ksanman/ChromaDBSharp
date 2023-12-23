@@ -15,13 +15,14 @@ namespace ChromaDBSharp.Client
         private readonly HttpClient _httpClient;
         private readonly string _tenant = DEFAULT_TENANT;
         private readonly string _database = DEFAULT_DATABASE;
-        public ChromaDBClient(HttpClient httpClient)
+        //public ChromaDBClient(HttpClient httpClient)
+        //{
+        //    _httpClient = httpClient;
+        //}
+
+        public ChromaDBClient(HttpClient httpClient, string tenant = DEFAULT_TENANT, string database = DEFAULT_DATABASE)
         {
             _httpClient = httpClient;
-        }
-
-        public ChromaDBClient(HttpClient httpClient, string tenant, string database) : this(httpClient)
-        {
             _tenant = tenant;
             _database = database;
         }
