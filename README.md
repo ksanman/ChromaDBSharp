@@ -3,6 +3,9 @@ ChromaDBSharp is a wrapper around the Chroma API that exposes all functionality 
 
 Library is consumed as a .net standard 2.1 library.
 
+## Nuget
+[ChromaDBSharp](https://www.nuget.org/packages/ChromaDBSharp/0.0.1)
+
 ## How to Use
 
 ChromaDB is designed to be used against a deployed version of ChromaDB. See [HERE](https://docs.trychroma.com/deployment) for official documentation on how to deploy ChromaDB. 
