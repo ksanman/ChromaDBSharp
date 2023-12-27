@@ -3,6 +3,17 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
     <Nullable>enable</Nullable>
+    <Title>ChromaDBSharp</Title>
+    <Version>0.0.1</Version>
+    <Authors>ksanman</Authors>
+    <Description>C# Client to interface with a deployed ChromaDB instance</Description>
+    <Copyright>2023 Kody Sanchez</Copyright>
+    <PackageProjectUrl>https://github.com/ksanman/ChromaDBSharp</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/ksanman/ChromaDBSharp</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>chromadb;document retrieval;vector database; vector embeddings;vector search</PackageTags>
+    <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +28,17 @@
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
       <_Parameter1>ChromaDBSharp.Tests</_Parameter1>
     </AssemblyAttribute>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\LICENSE">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    <None Include="..\README.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
   </ItemGroup>
 
 </Project>
